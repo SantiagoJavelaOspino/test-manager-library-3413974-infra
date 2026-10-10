@@ -3,7 +3,32 @@
 > **Prueba técnica · Ficha ADSO 3413974**
 > Horario: de **9:15 a. m. a 3:00 p. m.** (15:00). Después, **feria de presentación** de cada proyecto.
 
-Este repositorio es la **infraestructura** de *Manager Library*: contenedores, red, volúmenes y el motor de base de datos vacío. **Empieza vacío a propósito**: se construye en el fork de cada aprendiz.
+Infraestructura y orquestación de servicios para *Manager Library*.
+
+## Servicios orquestados
+
+| Servicio | Contenedor | Puerto | Descripción |
+|---|---|---|---|
+| `db` | `postgres:16-alpine` | `5432` | Base de datos PostgreSQL con esquema `library` |
+| `api` | PHP 8.2 FPM / Apache | `8000` | Backend API REST |
+| `app` | Node/Nginx (React build) | `3000` | Frontend React SPA |
+| `page` | Nginx Alpine | `8080` | Sitio público estático de presentación |
+
+## Uso con Docker Compose
+
+```bash
+# 1. Copiar variables de entorno
+cp .env.example .env
+
+# 2. Levantar los servicios
+docker compose up -d
+
+# 3. Ver logs
+docker compose logs -f
+
+# 4. Detener
+docker compose down
+```
 
 ## Instrucciones
 
