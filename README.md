@@ -1,76 +1,64 @@
 # test-manager-library-3413974-infra
 
-> **Prueba técnica · Ficha ADSO 3413974**
-> Horario: de **9:15 a. m. a 3:00 p. m.** (15:00). Después, **feria de presentación** de cada proyecto.
+> **Prueba técnica · Ficha ADSO 3413974**  
+> Metodología: **Spec-Driven Development (SDD)**
 
-Infraestructura y orquestación de servicios para *Manager Library*.
+Infraestructura y orquestación de servicios para **Manager Library**.
 
-## Servicios orquestados
+---
 
-| Servicio | Contenedor | Puerto | Descripción |
-|---|---|---|---|
-| `db` | `postgres:16-alpine` | `5432` | Base de datos PostgreSQL con esquema `library` |
-| `api` | PHP 8.2 FPM / Apache | `8000` | Backend API REST |
-| `app` | Node/Nginx (React build) | `3000` | Frontend React SPA |
-| `page` | Nginx Alpine | `8080` | Sitio público estático de presentación |
+## 1. Servicios Orquestados
 
-## Uso con Docker Compose
+| Servicio | Imagen / Contexto | Puerto Host | Descripción | Healthcheck |
+|---|---|---|---|---|
+| `db` | `postgres:16-alpine` | `5432` | Base de datos PostgreSQL con esquema `library` | `pg_isready -U postgres -d manager_library` |
+| `api` | `../api` (PHP 8.2) | `8000` | Backend API REST con arquitectura hexagonal | Depende de `db` (healthy) |
+| `app` | `../app` (Node build + Nginx) | `3000` | Frontend React SPA compilada para producción | Depende de `api` |
+| `page` | `../page` (Nginx Alpine) | `8080` | Sitio público estático de presentación | Independiente |
 
+---
+
+## 2. Instrucciones de Uso
+
+### 2.1 Preparación
 ```bash
-# 1. Copiar variables de entorno
+# Copiar variables de entorno
 cp .env.example .env
-
-# 2. Levantar los servicios
-docker compose up -d
-
-# 3. Ver logs
-docker compose logs -f
-
-# 4. Detener
-docker compose down
 ```
 
-## Instrucciones
+### 2.2 Despliegue de los Servicios
+```bash
+# Iniciar todos los contenedores en segundo plano
+docker compose up -d
 
-Cada aprendiz debe **crear el fork** de los seis repositorios del proyecto y **resolver el proyecto
-con el spec planteado**.
+# Verificar el estado de los servicios
+docker compose ps
 
-1. Hacer fork, a su cuenta de GitHub, de cada repositorio de la tabla del final.
-2. Leer el spec en [`test-manager-library-3413974-docs`](https://github.com/code-sena/test-manager-library-3413974-docs).
-   Se entrega en dos versiones: `spec-python/` y `spec-.net/`.
-3. Desarrollar en los forks.
+# Monitorear logs en tiempo real
+docker compose logs -f
+```
 
-## El reto se desarrolla con React y PHP (Laravel)
+### 2.3 Detención
+```bash
+# Detener contenedores
+docker compose down
 
-El spec está escrito para Python y para .NET, pero el reto **no** se hace en esos lenguajes:
+# Detener eliminando volúmenes de datos
+docker compose down -v
+```
 
-| Capa | Tecnología del reto |
-|---|---|
-| Frontend | React |
-| Backend | PHP con Laravel |
+---
 
-Lo que el spec define sobre el negocio —historias, criterios de aceptación, reglas, contrato de la
-API, modelo de datos— se respeta. Lo que define sobre la tecnología se traduce a React y Laravel.
+## 3. Puertos y Accesos Locales
 
-## La prueba no consiste en escribir el código
+- **Frontend App:** [http://localhost:3000](http://localhost:3000)
+- **Backend API:** [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health)
+- **Sitio Público Page:** [http://localhost:8080](http://localhost:8080)
+- **PostgreSQL:** `localhost:5432` (Base de datos: `manager_library`, Esquema: `library`)
 
-El propósito principal es ver la **capacidad de desempeño con SDD** (*Spec-Driven Development*,
-desarrollo guiado por especificación): cómo se lee, se interpreta y se aplica una especificación
-para llevarla a un stack distinto. El código es el medio, no el fin.
+---
 
-## Feria de presentación
+## 4. Redes y Volúmenes
 
-Al cerrar la prueba (3:00 p. m.) cada aprendiz **presenta su proyecto** al grupo: qué construyó del spec, qué dejó fuera y por qué,
-y una demostración corta de lo que funciona (la aplicación y el sitio público). Lo que se presenta es lo que quedó **subido a los forks
-antes de las 3:00 p. m.**: no se presenta nada que no esté en GitHub.
-
-## Los seis repositorios
-
-| Repositorio | Qué va ahí |
-|---|---|
-| [`test-manager-library-3413974-docs`](https://github.com/code-sena/test-manager-library-3413974-docs) | El spec: `spec-python/` y `spec-.net/` |
-| [`test-manager-library-3413974-api`](https://github.com/code-sena/test-manager-library-3413974-api) | Backend en PHP (Laravel) |
-| [`test-manager-library-3413974-app`](https://github.com/code-sena/test-manager-library-3413974-app) | Frontend en React |
-| [`test-manager-library-3413974-page`](https://github.com/code-sena/test-manager-library-3413974-page) | Sitio público estático de presentación |
-| [`test-manager-library-3413974-infra`](https://github.com/code-sena/test-manager-library-3413974-infra) | Contenedores, red, volúmenes y motor de base de datos vacío |
-| [`test-manager-library-3413974-tool`](https://github.com/code-sena/test-manager-library-3413974-tool) | Utilidades: sembrador de datos de demostración |
+- **Red:** `library_net` (bridge compartida entre los 4 contenedores).
+- **Volumen Persistente:** `pgdata` (almacena el directorio `/var/lib/postgresql/data` del motor PostgreSQL).
